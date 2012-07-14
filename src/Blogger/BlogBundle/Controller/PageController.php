@@ -11,7 +11,30 @@ class PageController extends Controller
 {
     public function indexAction()
     {
-        return $this->render('BloggerBlogBundle:Page:index.html.twig');
+		/*
+        $em = $this->getDoctrine()
+                   ->getEntityManager();
+
+        $blogs = $em->createQueryBuilder()
+                    ->select('b')
+                    ->from('BloggerBlogBundle:Blog',  'b')
+                    ->addOrderBy('b.created', 'DESC')
+                    ->getQuery()
+                    ->getResult();
+
+        return $this->render('BloggerBlogBundle:Page:index.html.twig', array(
+            'blogs' => $blogs
+        ));
+		*/
+		$em = $this->getDoctrine()
+                   ->getEntityManager();
+
+        $blogs = $em->getRepository('BloggerBlogBundle:Blog')
+                    ->getLatestBlogs();
+
+        return $this->render('BloggerBlogBundle:Page:index.html.twig', array(
+            'blogs' => $blogs
+        ));
     }
 	
 	public function aboutAction()
@@ -46,6 +69,29 @@ class PageController extends Controller
 
 		return $this->render('BloggerBlogBundle:Page:contact.html.twig', array(
 			'form' => $form->createView()
+		));
+	}
+	
+	public function sidebarAction()
+	{
+		$em = $this->getDoctrine()
+				   ->getEntityManager();
+
+		$tags = $em->getRepository('BloggerBlogBundle:Blog')
+				   ->getTags();
+
+		$tagWeights = $em->getRepository('BloggerBlogBundle:Blog')
+						 ->getTagWeights($tags);
+
+		
+		$commentLimit   = $this->container
+                           ->getParameter('blogger_blog.comments.latest_comment_limit');
+		$latestComments = $em->getRepository('BloggerBlogBundle:Comment')
+							 ->getLatestComments($commentLimit);
+
+		return $this->render('BloggerBlogBundle:Page:sidebar.html.twig', array(
+			'latestComments'    => $latestComments,
+			'tags'              => $tagWeights
 		));
 	}
 }
